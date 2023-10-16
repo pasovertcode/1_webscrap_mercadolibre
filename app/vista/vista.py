@@ -27,7 +27,9 @@ class Navegador:
 
             return elemento.text
         except Exception as e:
-            return f"Se ha producido una excepción: {e}"
+            print (f"Se ha producido una excepción: {e}")
+        finally:
+            return '0'
         
     def obtener_Elemento(self, selector):
         try:
@@ -43,6 +45,15 @@ class Navegador:
 
             elementos = WebDriverWait(self.driver, 10).until(
                 EC.visibility_of_all_elements_located((By.CSS_SELECTOR, selector)))
+
+            return elementos
+        except Exception as e:
+            return f"Se ha producido una excepción: {e}"
+        
+    def obtener_todos_Elementos_no_Visibles(self, selector):
+        try:
+
+            elementos = self.driver.find_elements(By.CSS_SELECTOR, selector)
 
             return elementos
         except Exception as e:

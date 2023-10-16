@@ -7,11 +7,12 @@ class Controlador:
     
     def ejecutar(self):
         # url = input("Escriba la URL: ")
+        busqueda_producto = "televisores smart tv"
         arrayPath = self.obtenerPath()
         url = "https://www.mercadolibre.com.co/"
         self.vista.abrir_pagina(url)
         fieldBusqueda = self.vista.obtener_Elemento('input#cb1-edit')
-        fieldBusqueda.send_keys(arrayPath['busqueda_producto'])
+        fieldBusqueda.send_keys(busqueda_producto)
         self.vista.hacer_clic('button.nav-search-btn')
         listaProductos = []
         i = 0
@@ -33,8 +34,8 @@ class Controlador:
                 )
                 c_p_almacenado+=1
                 print(f"Producto: {nombre_producto} almacenado.")
-            print(f"Cantidad de productos almacenados: {c_p_almacenado}")
-            print(f"Cantidad total: {listaProductos.len()}")
+            print(f"Cantidad de productos almacenados: {c_p_almacenado} en la pagina: {i}" )
+            print(f"Cantidad total: {len(listaProductos)}")
             url_siguiente_pag = self.vista.obtener_Elemento("li.andes-pagination__button--next > a.andes-pagination__link").get_attribute('href')
             if url_siguiente_pag != None:
                 self.vista.abrir_pagina(url_siguiente_pag)
@@ -49,28 +50,48 @@ class Controlador:
             json.dump(listaProductos, archivo)
         print(f"Datos guardados en: {pathFile}")
 
+        # Navegar a cada producto y obtener data
+        lista_data_productos = []
+        for producto in listaProductos:
+            self.vista.abrir_pagina(producto['url_producto']) 
+            dict_productos = arrayPath.copy()
+            for path in arrayPath:
+                dict_productos[path] = self.vista.obtener_texto(arrayPath.get(path))
+                print(f"{path}: {self.vista.obtener_texto(arrayPath.get(path))}")
+            
+            
+            lista_nodos = self.vista.obtener_todos_Elementos_no_Visibles('.ui-vpp-striped-specs__table')
 
+            for nodo in lista_nodos:
+                
+                if "Características generales" == nodo.find_element(By.CSS_SELECTOR,'h3').get_attribute('innerHTML') :
+                    for tablerow in nodo.find_elements(By.CSS_SELECTOR,"tr.andes-table__row"):
+                        print("Características encontradas.")
+                        if "Marca" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
+                            dict_productos["Marca"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                        if "Línea" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
+                            dict_productos["Línea"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                        if "Modelo" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
+                            dict_productos["Modelo"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                        if "Color" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
+                            dict_productos["Color"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                if "Pantalla" == nodo.find_element(By.CSS_SELECTOR,'h3').get_attribute('innerHTML') :
+                    for tablerow in nodo.find_elements(By.CSS_SELECTOR,"tr.andes-table__row"):
+                        if "Tipo de pantalla" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
+                            dict_productos["tipo_pantalla"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
 
+            print(f"Nuevo producto agregado. info: {dict_productos}")   
+            lista_data_productos.append(dict_productos)              
         
         espera = input()
         
-        """ 
-        for path in arrayPath:
-            print(f"{path}: {self.vista.obtener_texto(arrayPath.get(path))}") 
-        print("print del div: " + self.vista.obtener_texto(".ui-pdp-review__rating¿") )
-        #  > div.ui-pdp-header__info
-        titulo = self.vista.obtener_texto('h1.ui-pdp-title')
-        print(f"Nombre Producto: {titulo}") """
 
 
     def busquedaProducto(self):
         pass
     def obtenerPath(self):
         path = {
-            'busqueda_producto': "televisores smart tv",
             'nombre_producto': 'h1.ui-pdp-title',
-            'calificacion_producto': 'span.ui-pdp-review__rating',
-            'cantidad_calificadores': 'span.ui-pdp-review__amount',
             'precio_producto': 'span.andes-money-amount__fraction',
             'cantidad_disponible': 'span.ui-pdp-buybox__quantity__available'
             }
