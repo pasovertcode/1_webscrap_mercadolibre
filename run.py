@@ -1,5 +1,5 @@
-from app import controlador
+from app.controlador.controlador import Controlador
 
 if __name__ == '__main__':
-    controlador = controlador.Controlador()
+    controlador = Controlador()
     controlador.ejecutar()
