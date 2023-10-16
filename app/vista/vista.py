@@ -28,8 +28,8 @@ class Navegador:
             return elemento.text
         except Exception as e:
             print (f"Se ha producido una excepción: {e}")
-        finally:
-            return '0'
+            
+        return '0'
         
     def obtener_Elemento(self, selector):
         try:

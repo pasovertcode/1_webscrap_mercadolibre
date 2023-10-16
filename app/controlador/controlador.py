@@ -42,13 +42,11 @@ class Controlador:
             else:
                 break
 
-            if i == 1:
+            if i == 4:
                 break
         # Guardar pre-data de productos en un archivo .json en local
         pathFile = "app/resources/datos.json"
-        with open(pathFile, "w") as archivo:
-            json.dump(listaProductos, archivo)
-        print(f"Datos guardados en: {pathFile}")
+        self.guardarProductoLocal(listaProductos, pathFile)
 
         # Navegar a cada producto y obtener data
         lista_data_productos = []
@@ -56,7 +54,7 @@ class Controlador:
             self.vista.abrir_pagina(producto['url_producto']) 
             dict_productos = arrayPath.copy()
             for path in arrayPath:
-                dict_productos[path] = self.vista.obtener_texto(arrayPath.get(path))
+                dict_productos[path] = str(self.vista.obtener_texto(arrayPath.get(path)))
                 print(f"{path}: {self.vista.obtener_texto(arrayPath.get(path))}")
             
             
@@ -65,16 +63,17 @@ class Controlador:
             for nodo in lista_nodos:
                 
                 if "Características generales" == nodo.find_element(By.CSS_SELECTOR,'h3').get_attribute('innerHTML') :
+                    print("Características encontradas.")
                     for tablerow in nodo.find_elements(By.CSS_SELECTOR,"tr.andes-table__row"):
-                        print("Características encontradas.")
+                        
                         if "Marca" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
-                            dict_productos["Marca"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                            dict_productos["Marca"] = str(tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML'))
                         if "Línea" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
-                            dict_productos["Línea"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                            dict_productos["Linea"] = str(tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML'))
                         if "Modelo" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
-                            dict_productos["Modelo"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                            dict_productos["Modelo"] = str(tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML'))
                         if "Color" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
-                            dict_productos["Color"] = tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML')
+                            dict_productos["Color"] = str(tablerow.find_element(By.CSS_SELECTOR,"span.andes-table__column--value").get_attribute('innerHTML'))
                 if "Pantalla" == nodo.find_element(By.CSS_SELECTOR,'h3').get_attribute('innerHTML') :
                     for tablerow in nodo.find_elements(By.CSS_SELECTOR,"tr.andes-table__row"):
                         if "Tipo de pantalla" == tablerow.find_element(By.CSS_SELECTOR,"div.andes-table__header__container").get_attribute('innerHTML'):
@@ -82,6 +81,9 @@ class Controlador:
 
             print(f"Nuevo producto agregado. info: {dict_productos}")   
             lista_data_productos.append(dict_productos)              
+        
+        pathFile2 = "app/resources/lista_productos_completa.csv"
+        self.guardarProductosCompletoLocal(lista_data_productos, pathFile2)
         
         espera = input()
         
@@ -96,4 +98,17 @@ class Controlador:
             'cantidad_disponible': 'span.ui-pdp-buybox__quantity__available'
             }
         return path
-    
+    def guardarProductoLocal(self, lista_productos, path):
+        with open(path, "w") as archivo:
+            json.dump(lista_productos, archivo)
+        print(f"Datos guardados en: {path}")
+
+    def guardarProductosCompletoLocal(self, lista_productos, path):
+        import csv
+
+        nombres_columnas = ["nombre_producto", "precio_producto", "cantidad_disponible", "Marca", "Linea", "Modelo", "Color", "tipo_pantalla"]
+        with open(path, mode="w", newline='') as csv_file:
+            write_csv = csv.DictWriter(csv_file, fieldnames=nombres_columnas)
+            write_csv.writeheader()
+            write_csv.writerows(lista_productos)
+        print(f"Datos guardados en: {path}")
