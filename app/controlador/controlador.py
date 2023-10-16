@@ -1,5 +1,6 @@
 from ..vista.vista import Navegador
 from selenium.webdriver.common.by import By
+import json
 class Controlador:
     def __init__(self):
         self.vista = Navegador()
@@ -12,26 +13,45 @@ class Controlador:
         fieldBusqueda = self.vista.obtener_Elemento('input#cb1-edit')
         fieldBusqueda.send_keys(arrayPath['busqueda_producto'])
         self.vista.hacer_clic('button.nav-search-btn')
-        auxLista = []
+        listaProductos = []
+        i = 0
+        
+        # Obtener todos las url de los productos 
         while True:
-            
-            listaProductos = self.vista.obtener_todos_Elementos('li.ui-search-layout__item')
-            for elemento in listaProductos:
-                auxLista.append(
+            i+=1
+            c_p_almacenado = 0
+            for elemento in self.vista.obtener_todos_Elementos('li.ui-search-layout__item'):
+                nombre_producto = elemento.find_element(By.CSS_SELECTOR, 'h2.ui-search-item__title').text
+                url_producto = elemento.find_element(By.CSS_SELECTOR, 'a.ui-search-link').get_attribute('href')
+                precio_producto = int(elemento.find_element(By.CSS_SELECTOR, 'div.ui-search-price__second-line').text.split('\n')[1].replace(".", ""))
+                listaProductos.append(
                     {
-                        'nombre_producto': elemento.find_element(By.CSS_SELECTOR, 'h2.ui-search-item__title').text,
-                        'url_producto': elemento.find_element(By.CSS_SELECTOR, 'a.ui-search-link').get_attribute('href'),
-                        'precio_producto': int(elemento.find_element(By.CSS_SELECTOR, 'div.ui-search-price__second-line').text.split('\n')[1].replace(".", ""))
+                        'nombre_producto': nombre_producto,
+                        'url_producto': url_producto,
+                        'precio_producto': precio_producto
                     }
                 )
-            
+                c_p_almacenado+=1
+                print(f"Producto: {nombre_producto} almacenado.")
+            print(f"Cantidad de productos almacenados: {c_p_almacenado}")
+            print(f"Cantidad total: {listaProductos.len()}")
             url_siguiente_pag = self.vista.obtener_Elemento("li.andes-pagination__button--next > a.andes-pagination__link").get_attribute('href')
-            print(f"Url de la nav siguiente: {url_siguiente_pag}")
-            print(auxLista[0])
             if url_siguiente_pag != None:
                 self.vista.abrir_pagina(url_siguiente_pag)
             else:
                 break
+
+            if i == 1:
+                break
+        # Guardar pre-data de productos en un archivo .json en local
+        pathFile = "app/resources/datos.json"
+        with open(pathFile, "w") as archivo:
+            json.dump(listaProductos, archivo)
+        print(f"Datos guardados en: {pathFile}")
+
+
+
+        
         espera = input()
         
         """ 
